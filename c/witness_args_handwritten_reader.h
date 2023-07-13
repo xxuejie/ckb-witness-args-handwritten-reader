@@ -98,7 +98,7 @@ typedef struct {
 
 int cwhr_cursor_initialize(cwhr_cursor_t *cursor, cwhr_loader_t loader,
                            uint8_t *buf, size_t length) {
-  if (length <= CWHR_MINIMAL_BUFFER_LENGTH) {
+  if (length < CWHR_MINIMAL_BUFFER_LENGTH) {
     CWHR_DEBUG("Provided buffer is too small for cursor!\n");
     return CWHR_ERROR_CODE;
   }

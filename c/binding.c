@@ -16,8 +16,8 @@ static size_t __syscall = 0;
 static size_t __index = 0;
 static size_t __source = 0;
 
-void set_test_data(void *data, size_t length, size_t syscall, size_t index,
-                   size_t source) {
+void set_test_data(const void *data, size_t length, size_t syscall,
+                   size_t index, size_t source) {
   memcpy(__buf, data, length);
   __filled = length;
   __syscall = syscall;
@@ -63,10 +63,13 @@ void destroy_cursor(cwhr_cursor_t *cursor) {
 }
 
 cwhr_witness_args_reader_t *alloc_witness_args_reader() {
-  return (cwhr_witness_args_reader_t *)malloc(sizeof(cwhr_witness_args_reader_t));
+  return (cwhr_witness_args_reader_t *)malloc(
+      sizeof(cwhr_witness_args_reader_t));
 }
 
-void free_witness_args_reader(cwhr_witness_args_reader_t *reader) { free(reader); }
+void free_witness_args_reader(cwhr_witness_args_reader_t *reader) {
+  free(reader);
+}
 
 cwhr_bytes_reader_t *alloc_bytes_reader() {
   return (cwhr_bytes_reader_t *)malloc(sizeof(cwhr_bytes_reader_t));

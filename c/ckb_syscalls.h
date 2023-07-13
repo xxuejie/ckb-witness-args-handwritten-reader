@@ -9,7 +9,8 @@
 
 #include <stddef.h>
 
-size_t __internal_syscall(size_t n, size_t a0, size_t a1, size_t a2, size_t a3, size_t a4, size_t a5);
+size_t __internal_syscall(size_t n, size_t a0, size_t a1, size_t a2, size_t a3,
+                          size_t a4, size_t a5);
 
 #define syscall(n, a, b, c, d, e, f)                                           \
   __internal_syscall(n, (long)(a), (long)(b), (long)(c), (long)(d), (long)(e), \
