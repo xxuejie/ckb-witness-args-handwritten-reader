@@ -135,9 +135,9 @@ int cwhr_cursor_shift(cwhr_cursor_t *cursor, size_t offset) {
   return CKB_SUCCESS;
 }
 
-const uint8_t *cwhr_cursor_read(cwhr_cursor_t *cursor, size_t offset,
-                                size_t minimal_length,
-                                size_t *available_length) {
+const uint8_t *cwhr_cursor_read_available(cwhr_cursor_t *cursor, size_t offset,
+                                          size_t minimal_length,
+                                          size_t *available_length) {
   size_t loaded_end = cursor->loaded_offset + cursor->loaded_length;
   if (offset >= cursor->loaded_offset && offset <= loaded_end &&
       (offset + minimal_length) <= loaded_end) {
@@ -161,7 +161,8 @@ const uint8_t *cwhr_cursor_read(cwhr_cursor_t *cursor, size_t offset,
 int cwhr_cursor_read_u32(cwhr_cursor_t *cursor, size_t offset,
                          uint32_t *result) {
   size_t available_length = 0;
-  const uint8_t *p = cwhr_cursor_read(cursor, offset, 4, &available_length);
+  const uint8_t *p =
+      cwhr_cursor_read_available(cursor, offset, 4, &available_length);
   if (p == NULL) {
     return CWHR_ERROR_CODE;
   }
@@ -171,6 +172,29 @@ int cwhr_cursor_read_u32(cwhr_cursor_t *cursor, size_t offset,
   }
   *result = *((const uint32_t *)p);
   return CKB_SUCCESS;
+}
+
+int cwhr_cursor_read(cwhr_cursor_t *cursor, cwhr_data_accessor_f accessor,
+                     void *context) {
+  size_t read = 0;
+  while (read < cursor->total_length) {
+    size_t available_length = 0;
+    const uint8_t *p =
+        cwhr_cursor_read_available(cursor, read, 1, &available_length);
+    int ret = accessor(p, available_length, context);
+    if (ret != CKB_SUCCESS) {
+      CWHR_DEBUG("User-level accessor failure!\n");
+      return ret;
+    }
+    read += available_length;
+  }
+  return CKB_SUCCESS;
+}
+
+int cwhr_cursor_memcpy(cwhr_cursor_t *cursor, void *buf) {
+  cwhr_memcpy_accessor_context context;
+  cwhr_memcpy_accessor_context_initialize(&context, buf);
+  return cwhr_cursor_read(cursor, cwhr_memcpy_accessor, &context);
 }
 
 typedef struct {
@@ -254,7 +278,7 @@ int cwhr_bytes_reader_read(cwhr_bytes_reader_t *reader,
   uint32_t length = cwhr_bytes_reader_length(reader);
   while (read < length) {
     size_t available_length = 0;
-    const uint8_t *p = cwhr_cursor_read(
+    const uint8_t *p = cwhr_cursor_read_available(
         reader->cursor, reader->base_offset + 4 + read, 1, &available_length);
     uint32_t left = length - read;
     uint32_t available = (uint32_t)available_length;

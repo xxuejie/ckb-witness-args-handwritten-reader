@@ -46,27 +46,27 @@ size_t __internal_syscall(size_t n, size_t a0, size_t a1, size_t a2, size_t a3,
   return 0;
 }
 
-cwhr_witness_args_reader_t *create_witness_reader(size_t buf_length,
-                                                  size_t index, size_t source) {
+cwhr_cursor_t *create_cursor(size_t buf_length, size_t index, size_t source) {
   uint8_t *buf = (uint8_t *)malloc(buf_length);
   cwhr_cursor_t *cursor = (cwhr_cursor_t *)malloc(sizeof(cwhr_cursor_t));
-  cwhr_witness_args_reader_t *reader =
-      (cwhr_witness_args_reader_t *)malloc(sizeof(cwhr_witness_args_reader_t));
 
   assert(cwhr_cursor_initialize(cursor,
                                 cwhr_witness_loader_create(index, source), buf,
                                 buf_length) == CKB_SUCCESS);
 
-  assert(cwhr_witness_args_reader_create(reader, cursor) == CKB_SUCCESS);
-
-  return reader;
+  return cursor;
 }
 
-void destroy_witness_reader(cwhr_witness_args_reader_t *reader) {
-  free(reader->cursor->buf);
-  free(reader->cursor);
-  free(reader);
+void destroy_cursor(cwhr_cursor_t *cursor) {
+  free(cursor->buf);
+  free(cursor);
 }
+
+cwhr_witness_args_reader_t *alloc_witness_args_reader() {
+  return (cwhr_witness_args_reader_t *)malloc(sizeof(cwhr_witness_args_reader_t));
+}
+
+void free_witness_args_reader(cwhr_witness_args_reader_t *reader) { free(reader); }
 
 cwhr_bytes_reader_t *alloc_bytes_reader() {
   return (cwhr_bytes_reader_t *)malloc(sizeof(cwhr_bytes_reader_t));
