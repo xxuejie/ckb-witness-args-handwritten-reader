@@ -99,7 +99,7 @@ typedef struct {
 int cwhr_cursor_initialize(cwhr_cursor_t *cursor, cwhr_loader_t loader,
                            uint8_t *buf, size_t length) {
   if (length <= CWHR_MINIMAL_BUFFER_LENGTH) {
-    CWHR_DEBUG("Provided buffer is too small for cursor!");
+    CWHR_DEBUG("Provided buffer is too small for cursor!\n");
     return CWHR_ERROR_CODE;
   }
 
@@ -146,12 +146,12 @@ const uint8_t *cwhr_cursor_read(cwhr_cursor_t *cursor, size_t offset,
     return &cursor->buf[start];
   }
   if (minimal_length > cursor->length) {
-    CWHR_DEBUG("Requesting length is larger than buffer length!");
+    CWHR_DEBUG("Requesting length is larger than buffer length!\n");
     return NULL;
   }
   int ret = cwhr_cursor_shift(cursor, offset);
   if (ret != CKB_SUCCESS) {
-    CWHR_DEBUG("Cursor shift error: %d", ret);
+    CWHR_DEBUG("Cursor shift error: %d\n", ret);
     return NULL;
   }
   *available_length = cursor->loaded_length;
@@ -166,7 +166,7 @@ int cwhr_cursor_read_u32(cwhr_cursor_t *cursor, size_t offset,
     return CWHR_ERROR_CODE;
   }
   if (available_length < 4) {
-    CWHR_DEBUG("Cursor does not have enough data for a u32!");
+    CWHR_DEBUG("Cursor does not have enough data for a u32!\n");
     return CWHR_ERROR_CODE;
   }
   *result = *((const uint32_t *)p);
@@ -227,7 +227,7 @@ int cwhr_bytes_reader_create(cwhr_bytes_reader_t *reader,
 int cwhr_bytes_reader_verify(cwhr_bytes_reader_t *reader, int compatible) {
   (void)compatible;
   if (reader->length < 4) {
-    CWHR_DEBUG("Bytes must have room for length!");
+    CWHR_DEBUG("Bytes must have room for length!\n");
     return CWHR_ERROR_CODE;
   }
   uint32_t count = 0xFFFFFFFF;
@@ -237,7 +237,7 @@ int cwhr_bytes_reader_verify(cwhr_bytes_reader_t *reader, int compatible) {
   }
   size_t expected_length = 4 + (size_t)count;
   if (reader->length != expected_length) {
-    CWHR_DEBUG("Bytes has incorrect length! Expected: %ld, actual: %ld",
+    CWHR_DEBUG("Bytes has incorrect length! Expected: %ld, actual: %ld\n",
                expected_length, reader->length);
     return CWHR_ERROR_CODE;
   }
@@ -263,7 +263,7 @@ int cwhr_bytes_reader_read(cwhr_bytes_reader_t *reader,
     }
     int ret = accessor(p, available, context);
     if (ret != CKB_SUCCESS) {
-      CWHR_DEBUG("User-level accessor failure!");
+      CWHR_DEBUG("User-level accessor failure!\n");
       return ret;
     }
     read += available;
@@ -297,7 +297,7 @@ int cwhr_witness_args_reader_initialize(cwhr_witness_args_reader_t *reader,
   reader->length = length;
 
   if (reader->length < 16) {
-    CWHR_DEBUG("WitnessArgs must have room for length and offsets!");
+    CWHR_DEBUG("WitnessArgs must have room for length and offsets!\n");
     return CWHR_ERROR_CODE;
   }
   int ret = cwhr_cursor_read_u32(reader->cursor, reader->base_offset + 4,
@@ -370,19 +370,23 @@ int cwhr_witness_args_reader_verify(cwhr_witness_args_reader_t *reader,
     return ret;
   }
   if (((size_t)size) != reader->length) {
-    CWHR_DEBUG("WitnessArgs has incorrect length! Expected: %u, actual: %ld",
+    CWHR_DEBUG("WitnessArgs has incorrect length! Expected: %u, actual: %ld\n",
                size, reader->length);
     return CWHR_ERROR_CODE;
   }
 
+  if (reader->lock_offset % 4 != 0) {
+    CWHR_DEBUG("Offset field is not aligned to 4 bytes!\n");
+    return CWHR_ERROR_CODE;
+  }
   uint32_t field_count = reader->lock_offset / 4 - 1;
   if (field_count < 3) {
-    CWHR_DEBUG("WitnessArgs must have at least 3 fields!");
+    CWHR_DEBUG("WitnessArgs must have at least 3 fields!\n");
     return CWHR_ERROR_CODE;
   }
   if ((!compatible) && (field_count > 3)) {
     CWHR_DEBUG(
-        "WitnessArgs has remaining field but compatible flag is turned off!");
+        "WitnessArgs has remaining field but compatible flag is turned off!\n");
     return CWHR_ERROR_CODE;
   }
 
@@ -400,14 +404,14 @@ int cwhr_witness_args_reader_verify(cwhr_witness_args_reader_t *reader,
       return ret;
     }
     if (previous_offset > offset) {
-      CWHR_DEBUG("Offset %u is bigger than offset %u in WitnessArgs!", i - 1,
+      CWHR_DEBUG("Offset %u is bigger than offset %u in WitnessArgs!\n", i - 1,
                  i);
       return CWHR_ERROR_CODE;
     }
     previous_offset = offset;
   }
   if (((size_t)previous_offset) > reader->length) {
-    CWHR_DEBUG("The last offset is bigger than total length!");
+    CWHR_DEBUG("The last offset is bigger than total length!\n");
     return CWHR_ERROR_CODE;
   }
 

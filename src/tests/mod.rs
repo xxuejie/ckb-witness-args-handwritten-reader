@@ -69,6 +69,49 @@ proptest! {
     }
 
     #[test]
+    fn test_witness_args_verify_invalid(
+        buf_length in 32..131072usize,
+        lock in prop::collection::vec(0..=255u8, 0..204800),
+        input_type in prop::collection::vec(0..=255u8, 0..204800),
+        output_type in prop::collection::vec(0..=255u8, 0..204800),
+        flip_bit in 0..64usize
+    ) {
+        let mut builder = WitnessArgs::new_builder();
+        if !lock.is_empty() {
+            builder = builder.lock(Some(Bytes::from(lock)).pack());
+        }
+        if !input_type.is_empty() {
+            builder = builder.input_type(Some(Bytes::from(input_type)).pack());
+        }
+        if !output_type.is_empty() {
+            builder = builder.output_type(Some(Bytes::from(output_type)).pack());
+        }
+        let mut witness = builder.build().as_bytes().to_vec();
+        // Validation should fail when any bit in the first 16 bytes is flipped
+        witness[flip_bit / 8] ^= 1 << (flip_bit % 8);
+
+        unsafe {
+            set_test_data(
+                witness.as_ptr() as *const _,
+                witness.len(),
+                2074,
+                34,
+                111,
+            );
+        }
+        let reader = unsafe {
+            create_witness_reader(buf_length, 34, 111)
+        };
+        let result = unsafe {
+            cwhr_witness_args_reader_verify(reader, 0)
+        };
+        unsafe {
+            destroy_witness_reader(reader)
+        };
+        assert_ne!(result, 0);
+    }
+
+    #[test]
     fn test_witness_args_fetch(
         buf_length in 32..131072usize,
         lock in prop::collection::vec(0..=255u8, 0..204800),

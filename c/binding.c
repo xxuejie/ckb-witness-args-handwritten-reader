@@ -3,7 +3,9 @@
 #include <stdlib.h>
 
 #include "ckb_syscalls.h"
-#define CWHR_DEBUG(...) fprintf(stderr, __VA_ARGS__)
+#define CWHR_DEBUG(...)
+// Uncomment the following line for debugging purposes
+// #define CWHR_DEBUG(...) fprintf(stderr, __VA_ARGS__)
 #include "witness_args_handwritten_reader.h"
 
 #define BUF_SIZE (600 * 1024)
@@ -67,9 +69,7 @@ void destroy_witness_reader(cwhr_witness_args_reader_t *reader) {
 }
 
 cwhr_bytes_reader_t *alloc_bytes_reader() {
-  return (cwhr_bytes_reader_t *) malloc(sizeof(cwhr_bytes_reader_t));
+  return (cwhr_bytes_reader_t *)malloc(sizeof(cwhr_bytes_reader_t));
 }
 
-void free_bytes_reader(cwhr_bytes_reader_t *reader) {
-  free(reader);
-}
+void free_bytes_reader(cwhr_bytes_reader_t *reader) { free(reader); }
