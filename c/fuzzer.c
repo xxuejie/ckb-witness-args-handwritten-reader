@@ -24,8 +24,13 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   cwhr_cursor_t cursor;
   assert(cwhr_cursor_initialize(&cursor, cwhr_witness_loader_create(111, 222),
                                 buf, 32) == CKB_SUCCESS);
-  cwhr_witness_args_reader_t reader;
 
+  if (cursor.total_length < 1024) {
+    uint8_t tmp[1024];
+    assert(cwhr_cursor_memcpy(&cursor, tmp) == CKB_SUCCESS);
+  }
+
+  cwhr_witness_args_reader_t reader;
   if ((cwhr_witness_args_reader_create(&reader, &cursor) == CKB_SUCCESS) &&
       (cwhr_witness_args_reader_verify(&reader, 0) == CKB_SUCCESS)) {
     if (cwhr_witness_args_reader_has_lock(&reader)) {
@@ -46,14 +51,10 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       assert(cwhr_witness_args_reader_input_type(&reader, &input_type) ==
              CKB_SUCCESS);
 
-      data_scratcher_context c;
-      c.c = 0;
-      c.length = 0;
-
-      assert(cwhr_bytes_reader_read(&input_type, data_scratcher, &c) ==
-             CKB_SUCCESS);
-
-      assert(cwhr_bytes_reader_length(&input_type) == c.length);
+      if (cwhr_bytes_reader_length(&input_type) < 256) {
+        uint8_t tmp[256];
+        assert(cwhr_bytes_reader_memcpy(&input_type, tmp) == CKB_SUCCESS);
+      }
     }
 
     if (cwhr_witness_args_reader_has_output_type(&reader)) {

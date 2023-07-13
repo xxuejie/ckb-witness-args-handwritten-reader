@@ -3,3 +3,6 @@ Cargo.lock
 *.log
 native_fuzzer
 /corpus
+coverage_fuzzer
+*.profdata
+*.profraw
