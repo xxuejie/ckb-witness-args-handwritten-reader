@@ -114,7 +114,7 @@ proptest! {
         lock in prop::collection::vec(0..=255u8, 0..204800),
         input_type in prop::collection::vec(0..=255u8, 0..204800),
         output_type in prop::collection::vec(0..=255u8, 0..204800),
-        flip_bit in 0..64usize
+        flip_bit in 0..128usize
     ) {
         let mut builder = WitnessArgs::new_builder();
         if !lock.is_empty() {
