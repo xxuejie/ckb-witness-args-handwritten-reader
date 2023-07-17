@@ -1,6 +1,7 @@
 use ckb_types::{bytes::Bytes, packed::WitnessArgs, prelude::*};
 use core::ffi::c_void;
 use proptest::prelude::*;
+use rand::{rngs::StdRng, RngCore, SeedableRng};
 
 extern "C" {
     pub fn set_test_data(
@@ -37,8 +38,13 @@ proptest! {
     #[test]
     fn test_read_data(
         buf_length in 32..131072usize,
-        data in prop::collection::vec(0..=255u8, 0..409600),
+        data_length in 0..409600usize,
+        seed: u64,
     ) {
+        let mut rng = StdRng::seed_from_u64(seed);
+        let mut data = vec![0; data_length];
+        rng.fill_bytes(&mut data);
+
         unsafe {
             set_test_data(
                 data.as_ptr() as *const _,
@@ -51,6 +57,7 @@ proptest! {
         let cursor = unsafe {
             create_cursor(buf_length, 34, 111)
         };
+        println!("Buf length: {}", buf_length);
         let mut read_data = vec![0; data.len()];
         assert_eq!(unsafe {
             cwhr_cursor_memcpy(cursor, read_data.as_mut_ptr() as *mut _)
@@ -64,10 +71,19 @@ proptest! {
     #[test]
     fn test_witness_args_verify(
         buf_length in 32..131072usize,
-        lock in prop::collection::vec(0..=255u8, 0..204800),
-        input_type in prop::collection::vec(0..=255u8, 0..204800),
-        output_type in prop::collection::vec(0..=255u8, 0..204800),
+        lock_length in 0..204800usize,
+        input_type_length in 0..204800usize,
+        output_type_length in 0..204800usize,
+        seed: u64
     ) {
+        let mut rng = StdRng::seed_from_u64(seed);
+        let mut lock = vec![0; lock_length];
+        rng.fill_bytes(&mut lock);
+        let mut input_type = vec![0; input_type_length];
+        rng.fill_bytes(&mut input_type);
+        let mut output_type = vec![0; output_type_length];
+        rng.fill_bytes(&mut output_type);
+
         let mut builder = WitnessArgs::new_builder();
         if !lock.is_empty() {
             builder = builder.lock(Some(Bytes::from(lock)).pack());
@@ -111,11 +127,20 @@ proptest! {
     #[test]
     fn test_witness_args_verify_invalid(
         buf_length in 32..131072usize,
-        lock in prop::collection::vec(0..=255u8, 0..204800),
-        input_type in prop::collection::vec(0..=255u8, 0..204800),
-        output_type in prop::collection::vec(0..=255u8, 0..204800),
+        lock_length in 0..204800usize,
+        input_type_length in 0..204800usize,
+        output_type_length in 0..204800usize,
+        seed: u64,
         flip_bit in 0..128usize
     ) {
+        let mut rng = StdRng::seed_from_u64(seed);
+        let mut lock = vec![0; lock_length];
+        rng.fill_bytes(&mut lock);
+        let mut input_type = vec![0; input_type_length];
+        rng.fill_bytes(&mut input_type);
+        let mut output_type = vec![0; output_type_length];
+        rng.fill_bytes(&mut output_type);
+
         let mut builder = WitnessArgs::new_builder();
         if !lock.is_empty() {
             builder = builder.lock(Some(Bytes::from(lock)).pack());
@@ -161,9 +186,16 @@ proptest! {
     #[test]
     fn test_witness_args_fetch(
         buf_length in 32..131072usize,
-        lock in prop::collection::vec(0..=255u8, 0..204800),
-        input_type in prop::collection::vec(0..=255u8, 1..204800),
+        lock_length in 0..204800usize,
+        input_type_length in 0..204800usize,
+        seed: u64
     ) {
+        let mut rng = StdRng::seed_from_u64(seed);
+        let mut lock = vec![0; lock_length];
+        rng.fill_bytes(&mut lock);
+        let mut input_type = vec![0; input_type_length];
+        rng.fill_bytes(&mut input_type);
+
         let mut builder = WitnessArgs::new_builder();
         if !lock.is_empty() {
             builder = builder.lock(Some(Bytes::from(lock)).pack());
