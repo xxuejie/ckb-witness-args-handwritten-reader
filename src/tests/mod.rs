@@ -184,6 +184,79 @@ proptest! {
     }
 
     #[test]
+    fn test_witness_args_verify_invalid_bytes_length(
+        buf_length in 32..131072usize,
+        lock_length in 0..204800usize,
+        input_type_length in 0..204800usize,
+        output_type_length in 0..204800usize,
+        seed: u64,
+        index in 0..=2usize,
+        flip_bit in 0..32usize
+    ) {
+        let lengthes = [lock_length, input_type_length, output_type_length];
+        if lengthes[index] == 0 {
+            // An empty field has a zero-length bytes, there is no bits for us to flip.
+            return Ok(());
+        }
+
+        let mut rng = StdRng::seed_from_u64(seed);
+        let mut lock = vec![0; lock_length];
+        rng.fill_bytes(&mut lock);
+        let mut input_type = vec![0; input_type_length];
+        rng.fill_bytes(&mut input_type);
+        let mut output_type = vec![0; output_type_length];
+        rng.fill_bytes(&mut output_type);
+
+        let mut builder = WitnessArgs::new_builder();
+        if !lock.is_empty() {
+            builder = builder.lock(Some(Bytes::from(lock)).pack());
+        }
+        if !input_type.is_empty() {
+            builder = builder.input_type(Some(Bytes::from(input_type)).pack());
+        }
+        if !output_type.is_empty() {
+            builder = builder.output_type(Some(Bytes::from(output_type)).pack());
+        }
+        let mut witness = builder.build().as_bytes().to_vec();
+        // Locate the starting
+        let offset = {
+            let mut data = [0u8; 4];
+            data.copy_from_slice(&witness[(4 + index * 4)..(4 + index * 4 + 4)]);
+            u32::from_le_bytes(data) as usize
+        };
+
+        // Validation should fail when any bit in the first 16 bytes is flipped
+        witness[offset + flip_bit / 8] ^= 1 << (flip_bit % 8);
+
+        unsafe {
+            set_test_data(
+                witness.as_ptr() as *const _,
+                witness.len(),
+                2074,
+                34,
+                111,
+            );
+        }
+        let cursor = unsafe {
+            create_cursor(buf_length, 34, 111)
+        };
+        let reader = unsafe {
+            alloc_witness_args_reader()
+        };
+        assert_eq!(unsafe {
+            cwhr_witness_args_reader_create(reader, cursor)
+        }, 0);
+        let result = unsafe {
+            cwhr_witness_args_reader_verify(reader, 0)
+        };
+        unsafe {
+            free_witness_args_reader(reader);
+            destroy_cursor(cursor);
+        };
+        assert_ne!(result, 0);
+    }
+
+    #[test]
     fn test_witness_args_fetch(
         buf_length in 32..131072usize,
         lock_length in 0..204800usize,
