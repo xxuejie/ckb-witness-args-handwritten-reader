@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        submodules: true
     - name: Add riscv64 rust target
       run: rustup target add riscv64imac-unknown-none-elf
     - name: Install riscv64-gcc
