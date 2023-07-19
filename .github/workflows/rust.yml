@@ -21,6 +21,6 @@ jobs:
     - name: Build
       run: cargo build --verbose
     - name: Build fuzzing & coverage binaries
-      run: make
+      run: make -C tests
     - name: Run tests
-      run: cargo test --verbose -- --test-threads=1
+      run: cd tests; cargo test --verbose -- --test-threads=1

@@ -5,7 +5,7 @@ fn main() {
 
     cc::Build::new()
         .file("c_support/binding.c")
-        .include("c")
+        .include("../c")
         .include("c_support")
         .static_flag(true)
         .flag("-O3")

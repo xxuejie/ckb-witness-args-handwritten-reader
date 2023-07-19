@@ -7,15 +7,15 @@ FUZZER_BINARY=native_fuzzer
 FUZZER_OPTIONS=-max_len=204800 -workers=$(NPROC) -jobs=$(NPROC) $(CORPUS_DIR)
 COVERAGE_BINARY=coverage_fuzzer
 PROFDATA_FILE=default.profdata
-COVERAGE_FILE=c/witness_args_handwritten_reader.h
+COVERAGE_FILE=../c/witness_args_handwritten_reader.h
 
 all: fuzzer coverage
 
 fuzzer:
-	$(CLANG) -g -fsanitize=address,fuzzer c_support/fuzzer.c -I c -I c_support -o $(FUZZER_BINARY)
+	$(CLANG) -g -fsanitize=address,fuzzer c_support/fuzzer.c -I ../c -I c_support -o $(FUZZER_BINARY)
 
 coverage:
-	$(CLANG) -fprofile-instr-generate -fcoverage-mapping c_support/fuzzer.c c_support/StandaloneFuzzTargetMain.c -I c -I c_support -o $(COVERAGE_BINARY)
+	$(CLANG) -fprofile-instr-generate -fcoverage-mapping c_support/fuzzer.c c_support/StandaloneFuzzTargetMain.c -I ../c -I c_support -o $(COVERAGE_BINARY)
 
 run-fuzzer: fuzzer
 	./$(FUZZER_BINARY) $(FUZZER_OPTIONS)

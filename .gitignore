@@ -1,8 +1,9 @@
 /target
 Cargo.lock
-*.log
-native_fuzzer
-/corpus
-coverage_fuzzer
-*.profdata
-*.profraw
+/tests/target
+/tests/*.log
+/tests/native_fuzzer
+/tests/corpus
+/tests/coverage_fuzzer
+/tests/*.profdata
+/tests/*.profraw
