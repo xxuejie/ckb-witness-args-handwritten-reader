@@ -1,7 +1,7 @@
 fn main() {
     println!("cargo:rerun-if-changed=c_support/binding.c");
     println!("cargo:rerun-if-changed=c_support/ckb_syscalls.h");
-    println!("cargo:rerun-if-changed=c/witness_args_handwritten_reader.h");
+    println!("cargo:rerun-if-changed=../c/witness_args_handwritten_reader.h");
 
     cc::Build::new()
         .file("c_support/binding.c")
